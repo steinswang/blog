@@ -176,8 +176,8 @@ gentie:
 gitalk:
   githubID: steinswang
   repo: steinswang.github.io
-  ClientID: 7f49ede663f9b7db52c0
-  ClientSecret: 9eccb82327929c30e5d0242c0a473dd49bf6a3e4
+  ClientID: 9728a2be59846c0129fb
+  ClientSecret: d7d745452cf7fc41b521a305536f1999f22fb672
   adminUser: steinswang
   distractionFreeMode: true
   language: zh-CN
