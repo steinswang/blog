@@ -1,5 +1,6 @@
 #!/bin/bash
-read -p "Please input your comment:" comment
+echo "Please input your comment:"
+read comment
 hexo clean
 hexo g
 git add -A
