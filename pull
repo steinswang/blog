@@ -1,0 +1,5 @@
+#!/bin/bash
+cd ~/hexo/blog
+git pull
+cd ~/hexo/steinswang.github.io
+git pull
