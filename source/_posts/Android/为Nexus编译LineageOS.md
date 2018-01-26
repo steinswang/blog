@@ -70,8 +70,20 @@ vim .repo/local_manifests/lge.xml
 之后再 repo sync 一次。
 
 ## 编译
+```bash
+export WITH_SU=true //打开root
 brunch hammerhead
+```
 
+## 刷机
+```bash
+adb reboot bootloader
+source build/envsetup.sh
+
+#fastboot oem ramdump enable //如果bootloader download 模式未打开
+breakfast hammerhead
+fastboot -w flashall
+```
 
 PS:
 关于科学上网:
