@@ -20,7 +20,7 @@ bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gp
 
 For Ubuntu 16.04 (xenial), substitute:
 `
-libwxgtk2.8-dev → libwxgtk3.0-dev
+libwxgtk3.0-dev → libwxgtk2.8-dev
 `
 **Java**
 Different versions of LineageOS require different JDK (Java Development Kit) versions.
@@ -62,9 +62,18 @@ $ ccache -M 50G
 vim .repo/local_manifests/lge.xml
 
 ```
+<!-- nexus5 -->
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
   <project name="TheMuppets/proprietary_vendor_lge.git" path="vendor/lge" remote="github" />
+</manifest>
+```
+
+```
+<!-- nexus6p -->
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <project name="TheMuppets/proprietary_vendor_huawei.git" path="vendor/huawei" remote="github" />
 </manifest>
 ```
 之后再 repo sync 一次。

@@ -1,7 +1,7 @@
 ---
 
-title: hexo初始化
-permalink: hexo-init
+title: blog init
+permalink: blog-init
 categories:
   - 工具
 tags:
