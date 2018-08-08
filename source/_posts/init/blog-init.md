@@ -3,7 +3,7 @@
 title: blog init
 permalink: blog-init
 categories:
-  - 工具
+  - init
 tags:
   - tools
 date: 2017-12-23 14:53:20
