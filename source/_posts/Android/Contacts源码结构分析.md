@@ -371,13 +371,13 @@ address，website等信息……
 
 先进入新建联系人界面：
 
-主界面PeopleActivity中点击新建联系人Button，触发onOptionsItemSelected方法中的
+主界面`PeopleActivity`中点击新建联系人Button，触发`onOptionsItemSelected`方法中的
 
 case R.id.menu_add_contact分支： 
 
 执行`startActivity(intent);` 
 
-startActivity启动Intent，Intent的Action设置为android.intent.action.INSERT 
+`startActivity`启动Intent，Intent的Action设置为android.intent.action.INSERT 
 
 找到匹配此Action的Activity：`ContactEditorActivity`
 
@@ -431,7 +431,7 @@ mContent = (LinearLayout) view.findViewById(R.id.editors);
 </ScrollView>
 ```
 
-于是确认ContactEditorFragment的根布局就是一个id为editors的LinearLayout。 
+于是确认`ContactEditorFragment`的根布局就是一个id为`editors`的LinearLayout。 
 想到上一步的语句：
 
 ```xml
@@ -454,27 +454,267 @@ createContact(new AccountWithDataSet(account.name, account.type, dataSet));
 }
 ```
 
-上面代码首先取出了当前Account信息，数据信息。封装为一个AccountWithDataSet对象，作为createContact方法的参数。之前我们分析过，编辑界面和账户是高度相关的，所以对UI的动态操作必然和Account对象相关。进入createContact方法。
+上面代码首先取出了当前Account信息，数据信息。封装为一个`AccountWithDataSet`对象，作为`createContact`方法的参数。之前我们分析过，编辑界面和账户是高度相关的，所以对UI的动态操作必然和Account对象相关。进入`createContact`方法。
 
-看一下ContactEditorFragment中的createContact()到底对界面干了什么！！ 
+看一下`ContactEditorFragment`中的`createContact()`到底对界面干了什么！！ 
 
-createContact方法中调用了bindEditorsForNewContact(account, accountType): 
+`createContact`方法中调用了`bindEditorsForNewContact(account, accountType)`: 
 
 关键代码：
 ```java
 ……
 final RawContact rawContact = new RawContact();
-        if (newAccount != null) {
-            rawContact.setAccount(newAccount);
-        } else {
-            rawContact.setAccountToLocal();
-        }
+if (newAccount != null) {
+    rawContact.setAccount(newAccount);
+} else {
+    rawContact.setAccountToLocal();
+}
 final ValuesDelta valuesDelta = ValuesDelta.fromAfter(rawContact.getValues());
 final RawContactDelta insert = new RawContactDelta(valuesDelta);
 ……
 mState.add(insert);
 bindEditors();
 ```
+
+发现暂时还是没有对界面做什么事情，任然处于酝酿阶段……
+
+首先使用传入的Accout对象创建一个`RawContact`对象，然后使用`RawContact`对象构建了一个`RawContactDelta`对象insert，接着就将insert对象放入`RawContactDeltaList` 对象`mState`中。
+
+```xml
+RawContact类：raw contacts数据表内的一条数据，表示一个联系人某一特定帐户的信息。存储Data表中一些数据行（电话号码、Email、地址……）的集合及一些其他的信息。
+他的存储结构为： HashMap<String, ArrayList<ValuesDelta>>
+
+RawContactDelta类：包含RawContact对象（即一个联系人某一特定帐户的信息），并具有记录修改的功能。
+
+RawContactDeltaList类：内部的存储结构是ArrayList<RawContactDelta>，可以理解为 单个联系人所有账户的数据集合。
+```
+
+然后调用了`bindEditors()`法。 
+
+关键代码如下：
+```java
+……
+mContent.removeAllViews();
+……
+final BaseRawContactEditorView editor;
+……
+editor = (RawContactEditorView) inflater.inflate(R.layout.raw_contact_editor_view,mContent, false);
+//添加视图了……………………
+mContent.addView(editor);
+//为自定义视图BaseRawContactEditorView设置状态，必然是修改UI的操作！
+editor.setState(rawContactDelta, type, mViewIdGenerator, isEditingUserProfile());
+```
+
+可以看到，`mContent`这个LinearLayout添加的View是`editor`，而`editor`是一个自定义的视图`BaseRawContactEditorView`，布局是`R.layout.raw_contact_editor_view`。
+
+找到`raw_contact_editor_view`布局，发现该布局包含新建联系人页面所有的UI：
+
+![](https://user-images.githubusercontent.com/35097187/44019036-3bf3c4ae-9f10-11e8-81b0-dfa54fe8fad9.jpeg) 
+
+```xml
+<com.android.contacts.editor.RawContactEditorView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/editor_padding_top">
+<include
+用户账户相关UI
+        layout="@layout/editor_account_header_with_dropdown" />
+    <LinearLayout
+        android:id="@+id/body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:paddingTop="8dip">
+            <LinearLayout
+                android:layout_height="wrap_content"
+                android:layout_width="0dip"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <include
+            Name相关的UI
+                    android:id="@+id/edit_name"
+                    layout="@layout/structured_name_editor_view" />
+                <include
+            拼音名
+                    android:id="@+id/edit_phonetic_name"
+                    layout="@layout/phonetic_name_editor_view" />
+            </LinearLayout>
+            <include
+            照片相关的UI
+                android:id="@+id/edit_photo"
+                android:layout_marginRight="8dip"
+                android:layout_marginEnd="8dip"
+                layout="@layout/item_photo_editor" />
+        </LinearLayout>
+        <LinearLayout
+            中间部分Item的显示在此处
+            android:id="@+id/sect_fields"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dip"/>
+            添加其他字段 按钮
+        <Button
+            android:id="@+id/button_add_field"
+            android:text="@string/add_field"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="32dip"/>
+    </LinearLayout>
+</com.android.contacts.editor.RawContactEditorView>
+```
+
+1.那么问题来了：中间的那部分布局（电话、地址……）去哪儿了？
+
+搜索有可能包含这些内容的线性布局`sect_fields`，发现在`RawContactEditorView`类中初始化为`mFields`：
+
+`mFields = (ViewGroup)findViewById(R.id.sect_fields);`
+
+那么只需要看代码中对mFields添加了什么UI！
+
+2.回到之前的`bindEditors()`方法，`RawContactEditorView` 对象`editor`从xml中解析完成后，执行了`setState`方法：
+
+```java
+editor.setState(rawContactDelta, type, mViewIdGenerator, isEditingUserProfile());
+```
+
+1.`进入RawContactEditorView`类，找到`setState`方法：
+
+```java
+public void  setState(RawContactDelta state, AccountType type, ViewIdGenerator vig,boolean isProfile)
+……
+// 遍历当前账户所有可能的item种类，如电话，姓名，地址……，并分别创建自定义视图KindSectionView
+   for (DataKind kind : type.getSortedDataKinds()) {
+……
+  final KindSectionView section = (KindSectionView)mInflater.inflate(
+                        R.layout.item_kind_section, mFields, false);
+                section.setEnabled(isEnabled());
+                section.setState(kind, state, false, vig);
+                mFields.addView(section);
+……
+}
+```
+
+发现遍历了当前账号类型中所有可能的数据类型（`DataKind`），
+
+创建了相关的自定义视图`KindSectionView`对象`section`，
+
+再将`section`对象添加到`mFields`中显示，
+
+这个mFields正是之前在`RawContactEditorView`类中初始化的线性布局：
+```java
+mFields = (ViewGroup)findViewById(R.id.sect_fields)。
+```
+
+到这里，基本可以确定，中间部分（也就是除了Name、Photo 和底部的添加字段Button之外的部分），就是通过这个`mFields`动态的根据当前账户类型添加编辑的`KindSectionView`条目来填充的。
+
+首先观察一下`KindSectionView`的布局文件`item_kind_section`：
+
+```xml
+<com.android.contacts.editor.KindSectionView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+    <include                   这是一个TextView，title
+        android:id="@+id/kind_title_layout"
+        layout="@layout/edit_kind_title" />
+      <LinearLayout            线性布局，用于添加EditText
+        android:id="@+id/kind_editors"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" />
+    <include                   添加新条目的TextView，初始化状态不可见
+        android:id="@+id/add_field_footer"
+        layout="@layout/edit_add_field" />
+</com.android.contacts.editor.KindSectionView>
+```
+
+1.`KindSectionView`加载完xml文件之后，会执行`onFinishInflate`方法：
+
+```java
+mTitle = (TextView) findViewById(R.id.kind_title);
+mEditors = (ViewGroup) findViewById(R.id.kind_editors); 
+mAddFieldFooter = findViewById(R.id.add_field_footer);
+```
+
+把Xml文件中三个主要的部分都得到了，接下来重点就是观察代码中对他们做了什么。
+
+在第12步中，加载完xml文件之后，执行`KindSectionView`的`setState`方法：
+
+```java
+section.setState(kind, state, false, vig);
+```
+
+将`rawContactDelta`对象`state`传递给了`KindSectionView`类的`setState`方法：
+
+进入`KindSectionView`类的`setState`方法：
+
+```java
+mKind = kind;
+mState = state;
+rebuildFromState();
+```
+
+先进行局部变量的赋值
+
+1.然后进入到`rebuildFromState()`方法：
+```java
+  for (ValuesDelta entry : mState.getMimeEntries(mKind.mimeType)) {
+       //……遍历当前账户可能的键值对，比如电话、Email、地址……
+      createEditorView(entry);  //这个方法应当是创建EditText的方法！
+  }
+```
+
+在这个方法中，对`mState`集合中所有Mime类型的`ValuesDelta`集合（`ArrayList<ValuesDelta>`类型）进行遍历，而后将每一个 `ValuesDelta`对象 `entry`作为参数调用了`createEditorView(entry)`也就是创建各个种类的`EditText`方法，根据`entry`对象创建相应的`EditText`！
+
+简单说，就是创建`mState`中存在的类型的`EditText`。
+当然……这还都只是猜测，需要进入`createEditorView`方法确认。
+
+1.进入`createEditorView`方法：
+
+```java
+view = mInflater.inflate(layoutResId, mEditors, false);
+Editor editor = (Editor) view;
+editor.setValues(mKind, entry, mState, mReadOnly, mViewIdGenerator);
+```
+
+第13步初始化的`mEditors`对象（也就是那个被猜测应该是放`EditText`的线性布局）在这里被使用！
+
+1.联系上下文，实际上此时editor对象是`TextFieldsEditorView`类的对象，进入`TextFieldsEditorView`的`setValues`方法，看看他是如何根据entry对象创建`EditText`的：
+
+```java
+public void setValues(DataKind kind, ValuesDelta entry, RawContactDelta state, boolean readOnly,ViewIdGenerator vig) {
+int fieldCount = kind.fieldList.size();  //获取所有可能的datakind的总数
+for (int index = 0; index < fieldCount; index++)    //遍历所有可能的datakind，
+{ 
+final EditText fieldView = new EditText(mContext);  //创建EditText对象，之后进行配置
+fieldView.setLayoutParams……
+fieldView.setTextAppearance(getContext(), android.R.style.TextAppearance_Medium);
+fieldView.setHint(field.titleRes);   //EditText的Hint
+……     
+
+fieldView.addTextChangedListener(new TextWatcher()  //注册TextChangedListener
+{
+	@Override
+	public void afterTextChanged(Editable s) {
+	    // Trigger event for newly changed value
+	    onFieldChanged(column, s.toString());
+	}
+	mFields.addView(fieldView);    //将EditText添加到当前的线性布局中！
+}
+```
+注释基本解释了如何通过一个`ValuesDelta`（理解为键值对集合）对象`entry`创建布局中的所有`EditText`。
+
+至此，联系人编辑界面的显示原理基本分析完成。
+
 
 数据存储相关
 
