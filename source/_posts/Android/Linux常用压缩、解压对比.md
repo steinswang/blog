@@ -183,3 +183,5 @@ rar -x examples.rar
 压缩比率=原内容大小/压缩后大小，压缩比率越大，则表明压缩后占用空间的压缩包越小
 
 ![](https://user-images.githubusercontent.com/35097187/44308296-60b34600-a3e5-11e8-9dd0-35f605880467.png)
+
+转自:https://www.cnblogs.com/joshua317/p/6170839.html
